@@ -1,0 +1,13 @@
+train: /home/juebrauer/link_to_vcd/18_datasets/50_parasites/parasites.v2-release.yolov11/train/images
+val: /home/juebrauer/link_to_vcd/18_datasets/50_parasites/parasites.v2-release.yolov11/valid/images
+test: /home/juebrauer/link_to_vcd/18_datasets/50_parasites/parasites.v2-release.yolov11/test/images
+
+nc: 8
+names: ['Ancylostoma Spp', 'Ascaris Lumbricoides', 'Enterobius Vermicularis', 'Fasciola Hepatica', 'Hymenolepis', 'Schistosoma', 'Taenia Sp', 'Trichuris Trichiura']
+
+roboflow:
+  workspace: roboflow-100
+  project: parasites-1s07h
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/roboflow-100/parasites-1s07h/dataset/2
