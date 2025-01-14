@@ -64,9 +64,10 @@ class SingleEncoderLayer(nn.Module):
             nn.Linear(embed_size * 4, embed_size)
         )
 
-    def forward(self, x, mask=None):
+    def forward(self, x):
+
         # Apply attention and add skip connection
-        attention = self.attention(x, x, x, mask)
+        attention = self.attention(x, x, x)
         x = self.norm1(attention + x)
 
         # Apply feed-forward network and add skip connection
@@ -93,19 +94,26 @@ class SingleDecoderLayer(nn.Module):
             nn.Linear(embed_size * 4, embed_size)
         )
 
-    def forward(self, x, encoder_output, src_mask=None, trg_mask=None):
+    def forward(self, x, encoder_output):
+
+        # Dynamic generation of target mask based on sequence length
+        seq_length = x.size(1)
+        trg_mask = torch.tril(torch.ones(seq_length, seq_length, device=x.device)).bool()
+
         # Self-attention
         self_attention = self.self_attention(x, x, x, trg_mask)
         x = self.norm1(self_attention + x)
 
         # Encoder-decoder attention
-        encoder_attention = self.encoder_attention(x, encoder_output, encoder_output, src_mask)
+        encoder_attention = self.encoder_attention(x, encoder_output, encoder_output, None)
         x = self.norm2(encoder_attention + x)
 
         # Feed-forward network
         forward = self.feed_forward(x)
         out = self.norm3(forward + x)
         return out
+
+
 
 
 class SimpleTransformer(nn.Module):
@@ -122,8 +130,9 @@ class SimpleTransformer(nn.Module):
         self.encoder = nn.ModuleList([SingleEncoderLayer(embed_size) for _ in range(num_layers)])
         self.decoder = nn.ModuleList([SingleDecoderLayer(embed_size) for _ in range(num_layers)])
         self.fc_out = nn.Linear(embed_size, trg_vocab_size)
+                
 
-    def forward(self, src, trg, src_mask=None, trg_mask=None):
+    def forward(self, src, trg):
         # Embedding with positional encoding
         src_positions = torch.arange(0, src.size(1)).unsqueeze(0).to(src.device)
         trg_positions = torch.arange(0, trg.size(1)).unsqueeze(0).to(trg.device)
@@ -132,11 +141,11 @@ class SimpleTransformer(nn.Module):
 
         # Encoder
         for layer in self.encoder:
-            src = layer(src, src_mask)
+            src = layer(src)
 
         # Decoder
         for layer in self.decoder:
-            trg = layer(trg, src, src_mask, trg_mask)
+            trg = layer(trg, src)
 
         # Output layer
         out = self.fc_out(trg)
